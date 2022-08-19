@@ -5,7 +5,10 @@
 // You can read more about it at https://doc.rust-lang.org/std/convert/trait.TryFrom.html
 // Execute `rustlings hint try_from_into` or use the `hint` watch subcommand for a hint.
 
-use std::convert::{TryFrom, TryInto};
+use std::{
+    convert::{TryFrom, TryInto},
+    ops::RangeInclusive,
+};
 
 #[derive(Debug, PartialEq)]
 struct Color {
@@ -23,8 +26,6 @@ enum IntoColorError {
     IntConversion,
 }
 
-// I AM NOT DONE
-
 // Your task is to complete this implementation
 // and return an Ok result of inner type Color.
 // You need to create an implementation for a tuple of three integers,
@@ -33,11 +34,28 @@ enum IntoColorError {
 // Note that the implementation for tuple and array will be checked at compile time,
 // but the slice implementation needs to check the slice length!
 // Also note that correct RGB color values must be integers in the 0..=255 range.
+const COLOR_RANGE: RangeInclusive<u8> = 0..=255;
 
 // Tuple implementation
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = IntoColorError;
     fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+        let red = to_u8(&tuple.0)?;
+        let green = to_u8(&tuple.1)?;
+        let blue = to_u8(&tuple.2)?;
+        Ok(Color { red, green, blue })
+    }
+}
+
+fn to_u8(val: &i16) -> Result<u8, IntoColorError> {
+    match (*val).try_into() {
+        Ok(val) => {
+            if !COLOR_RANGE.contains(&val) {
+                return Err(IntoColorError::IntConversion);
+            }
+            Ok(val)
+        }
+        Err(_) => return Err(IntoColorError::IntConversion),
     }
 }
 
@@ -45,6 +63,8 @@ impl TryFrom<(i16, i16, i16)> for Color {
 impl TryFrom<[i16; 3]> for Color {
     type Error = IntoColorError;
     fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
+        let tuple = (arr[0], arr[1], arr[2]);
+        Color::try_from(tuple)
     }
 }
 
@@ -52,6 +72,14 @@ impl TryFrom<[i16; 3]> for Color {
 impl TryFrom<&[i16]> for Color {
     type Error = IntoColorError;
     fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
+        if slice.len() != 3 {
+            return Err(IntoColorError::BadLen);
+        }
+        let arr: [i16; 3] = match slice.try_into() {
+            Ok(arr) => arr,
+            Err(_) => return Err(IntoColorError::IntConversion),
+        };
+        Color::try_from(arr)
     }
 }
 
