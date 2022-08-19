@@ -18,6 +18,8 @@
 // - The output element is going to be a Vector of strings.
 // Execute `rustlings hint quiz2` or use the `hint` watch subcommand for a hint.
 
+fn string_slice(input: &str) {}
+fn string(input: String) {}
 
 pub enum Command {
     Uppercase,
